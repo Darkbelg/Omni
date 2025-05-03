@@ -53,4 +53,6 @@ python process_videos.py --model_path="model/Qwen2.5-Omni-7B" --videos_dir="segm
 python process_videos.py --model_path="model/Qwen2.5-Omni-3B" --videos_dir="segments" --output_csv="system_prompt_technical-detailed-video-analysis-3b.csv" --custom_prompt_path="system_prompt_technical-detailed-video-analysis.md"
 python process_videos.py --model_path="model/Qwen2.5-Omni-7B" --videos_dir="segments" --output_csv="dead-space-system_prompt_technical-close-reading-of-video-content.csv" --custom_prompt_path="system_prompt_technical-close-reading-of-video-content.md"
 python process_videos.py --model_path="model/Qwen2.5-Omni-3B" --videos_dir="segments" --output_csv="dead-space-system_prompt_technical-close-reading-of-video-content-3b.csv" --custom_prompt_path="system_prompt_technical-close-reading-of-video-content.md"
+python process_videos.py --model_path="model/Qwen2.5-Omni-7B" --videos_dir="segments" --output_csv="dead-space-essay.csv" --custom_prompt_path="system_prompt_technical-essay.md"
+python process_videos.py --model_path="model/Qwen2.5-Omni-3B" --videos_dir="segments" --output_csv="dead-space-essay-3b.csv" --custom_prompt_path="system_prompt_technical-essay.md"
 ```

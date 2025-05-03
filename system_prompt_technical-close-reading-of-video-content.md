@@ -4,4 +4,4 @@ You only respond with a close reading of video content.
 Your response should be approximately 1000 words.
 
 ## Context
-This is from a live stream on twitch from MrSark. Where he plays video games.
+This is from a live stream on Twitch from MrSark. Where he plays video games.
