@@ -7,7 +7,7 @@ import logging
 import argparse
 from tqdm import tqdm
 from pathlib import Path
-from transformers import Qwen2_5OmniModel, Qwen2_5OmniProcessor
+from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
 from qwen_omni_utils import process_mm_info
 
 # Set up logging
@@ -39,7 +39,7 @@ def clean_output_text(text):
         return parts[1].strip()
     return text  # Return original if pattern not found
 
-def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
+def process_videos(model_name, videos_dir, output_csv, custom_prompt_path):
     # Create processed directory if it doesn't exist
     processed_dir = os.path.join(videos_dir, "processed")
     os.makedirs(processed_dir, exist_ok=True)
@@ -49,18 +49,29 @@ def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
     logging.info(f"Using custom prompt: {custom_prompt[:100]}...")
 
     # The default system prompt required for Qwen2.5-Omni
-    system_prompt = "You are Qwen, a virtual human developed by the Qwen Team, Alibaba Group, capable of perceiving auditory and visual inputs, as well as generating text and speech."
+    system_prompt = {
+        "role": "system",
+        "content": [
+            {"type": "text", "text": "You are Qwen, a virtual human developed by the Qwen Team, Alibaba Group, capable of perceiving auditory and visual inputs, as well as generating text and speech."}
+        ]
+    }
 
     # Load model and processor
     logging.info("Loading model and processor...")
     try:
-        model = Qwen2_5OmniModel.from_pretrained(
-            model_path,
-            torch_dtype=torch.bfloat16,
+        # Load directly from Hugging Face Hub
+        model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
+            model_name,
+            torch_dtype="auto",
             device_map="auto",
-            enable_audio_output=False,  # We don't need audio output
+            trust_remote_code=True
         )
-        processor = Qwen2_5OmniProcessor.from_pretrained(model_path)
+        model.disable_talker()  # Since we don't need audio output
+        
+        processor = Qwen2_5OmniProcessor.from_pretrained(
+            model_name,
+            trust_remote_code=True
+        )
         logging.info("Model and processor loaded successfully")
     except Exception as e:
         logging.error(f"Error loading model: {str(e)}")
@@ -102,10 +113,7 @@ def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
         try:
             # Create conversation with system prompt, video, and text prompt
             conversation = [
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                },
+                system_prompt,
                 {
                     "role": "user",
                     "content": [
@@ -120,14 +128,14 @@ def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
             audios, images, videos = process_mm_info(conversation, use_audio_in_video=True)
             inputs = processor(
                 text=text,
-                audios=audios,
+                audio=audios,
                 images=images,
                 videos=videos,
                 return_tensors="pt",
                 padding=True,
                 use_audio_in_video=True
             )
-            inputs = inputs.to(model.device).to(model.dtype)
+            inputs = inputs.to(model.device)
 
             # Generate text output
             with torch.no_grad():
@@ -166,7 +174,7 @@ def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process video clips with Qwen2.5-Omni model")
-    parser.add_argument("--model_path", default="model/Qwen2.5-Omni-7B", help="Path to the model")
+    parser.add_argument("--model_name", default="Qwen/Qwen2.5-Omni-3B", help="Name of the model on Hugging Face Hub")
     parser.add_argument("--videos_dir", default="videos_split", help="Directory containing video clips")
     parser.add_argument("--output_csv", default="dead-space.csv", help="Output CSV file name")
     parser.add_argument("--custom_prompt_path", default="system_prompt.md", help="Path to custom prompt markdown file")
@@ -179,4 +187,4 @@ if __name__ == "__main__":
             writer = csv.writer(csvfile)
             writer.writerow(['Filename', 'Model Output'])
 
-    process_videos(args.model_path, args.videos_dir, args.output_csv, args.custom_prompt_path)
+    process_videos(args.model_name, args.videos_dir, args.output_csv, args.custom_prompt_path)
