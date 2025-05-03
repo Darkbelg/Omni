@@ -145,7 +145,7 @@ def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
                     **inputs,
                     use_audio_in_video=True,
                     return_audio=False,
-                    max_new_tokens=512
+                    max_new_tokens=4096
                 )
 
             output_text = processor.batch_decode(text_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
@@ -176,7 +176,7 @@ def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process video clips with Qwen2.5-Omni model")
-    parser.add_argument("--model_path", default="model/Qwen2.5-Omni-3B", help="Path to local model directory")
+    parser.add_argument("--model_path", default="model/Qwen2.5-Omni-7B", help="Path to local model directory")
     parser.add_argument("--videos_dir", default="videos_split", help="Directory containing video clips")
     parser.add_argument("--output_csv", default="dead-space.csv", help="Output CSV file name")
     parser.add_argument("--custom_prompt_path", default="system_prompt.md", help="Path to custom prompt markdown file")
