@@ -39,7 +39,7 @@ def clean_output_text(text):
         return parts[1].strip()
     return text  # Return original if pattern not found
 
-def process_videos(model_name, videos_dir, output_csv, custom_prompt_path):
+def process_videos(model_path, videos_dir, output_csv, custom_prompt_path):
     # Create processed directory if it doesn't exist
     processed_dir = os.path.join(videos_dir, "processed")
     os.makedirs(processed_dir, exist_ok=True)
@@ -59,18 +59,20 @@ def process_videos(model_name, videos_dir, output_csv, custom_prompt_path):
     # Load model and processor
     logging.info("Loading model and processor...")
     try:
-        # Load directly from Hugging Face Hub
+        # Load model from local path
         model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
-            model_name,
+            model_path,
             torch_dtype="auto",
             device_map="auto",
-            trust_remote_code=True
+            trust_remote_code=True,
+            local_files_only=True  # Force using local files
         )
         model.disable_talker()  # Since we don't need audio output
         
         processor = Qwen2_5OmniProcessor.from_pretrained(
-            model_name,
-            trust_remote_code=True
+            model_path,
+            trust_remote_code=True,
+            local_files_only=True  # Force using local files
         )
         logging.info("Model and processor loaded successfully")
     except Exception as e:
@@ -174,7 +176,7 @@ def process_videos(model_name, videos_dir, output_csv, custom_prompt_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process video clips with Qwen2.5-Omni model")
-    parser.add_argument("--model_name", default="Qwen/Qwen2.5-Omni-3B", help="Name of the model on Hugging Face Hub")
+    parser.add_argument("--model_path", default="model/Qwen2.5-Omni-3B", help="Path to local model directory")
     parser.add_argument("--videos_dir", default="videos_split", help="Directory containing video clips")
     parser.add_argument("--output_csv", default="dead-space.csv", help="Output CSV file name")
     parser.add_argument("--custom_prompt_path", default="system_prompt.md", help="Path to custom prompt markdown file")
@@ -187,4 +189,4 @@ if __name__ == "__main__":
             writer = csv.writer(csvfile)
             writer.writerow(['Filename', 'Model Output'])
 
-    process_videos(args.model_name, args.videos_dir, args.output_csv, args.custom_prompt_path)
+    process_videos(args.model_path, args.videos_dir, args.output_csv, args.custom_prompt_path)
